@@ -113,10 +113,16 @@ func (c *Client) Encode(params Params) io.Reader {
 	return &buf
 }
 
+func (c *Client) CheckSign(params Params) bool {
+	return params.GetString("sign") == c.Sign(params)
+}
+
 func (c *Client) Sign(params Params) string {
 	var keys = make([]string, 0, len(params))
 	for k, _ := range params {
-		keys = append(keys, k)
+		if k != "sign" {
+			keys = append(keys, k)
+		}
 	}
 	sort.Strings(keys)
 
