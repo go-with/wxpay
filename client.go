@@ -33,6 +33,7 @@ func NewClient(appId, mchId, apiKey string) *Client {
 	}
 }
 
+// 附着商户证书
 func (c *Client) WithCert(certFile, keyFile, rootcaFile string) error {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -47,13 +48,15 @@ func (c *Client) WithCert(certFile, keyFile, rootcaFile string) error {
 	if !ok {
 		return errors.New("failed to parse root certificate")
 	}
+	conf := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      pool,
+	}
+	trans := &http.Transport{
+		TLSClientConfig: conf,
+	}
 	c.seclient = &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      pool,
-			},
-		},
+		Transport: trans,
 	}
 	return nil
 }
@@ -72,6 +75,7 @@ func (c *Client) Post(url string, params Params, tls bool) (Params, error) {
 	return c.Decode(resp.Body), nil
 }
 
+// XML解码
 func (c *Client) Decode(r io.Reader) Params {
 	var (
 		d      *xml.Decoder
@@ -97,6 +101,7 @@ func (c *Client) Decode(r io.Reader) Params {
 	return params
 }
 
+// XML编码
 func (c *Client) Encode(params Params) io.Reader {
 	var buf bytes.Buffer
 	buf.WriteString(`<xml>`)
@@ -113,10 +118,12 @@ func (c *Client) Encode(params Params) io.Reader {
 	return &buf
 }
 
+// 验证签名
 func (c *Client) CheckSign(params Params) bool {
 	return params.GetString("sign") == c.Sign(params)
 }
 
+// 生成签名
 func (c *Client) Sign(params Params) string {
 	var keys = make([]string, 0, len(params))
 	for k, _ := range params {
