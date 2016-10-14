@@ -5,9 +5,9 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -138,6 +138,8 @@ func (c *Client) Sign(params Params) string {
 	buf.WriteString(`key=`)
 	buf.WriteString(c.ApiKey)
 
-	res := fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
-	return strings.ToUpper(res)
+	sum := md5.Sum(buf.Bytes())
+	str := hex.EncodeToString(sum[:])
+
+	return strings.ToUpper(str)
 }
