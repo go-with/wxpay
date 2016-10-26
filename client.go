@@ -13,23 +13,36 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 )
 
 const bodyType = "application/xml; charset=utf-8"
 
+// API客户端
 type Client struct {
-	seclient *http.Client
+	stdClient *http.Client
+	tlsClient *http.Client
 
 	AppId  string
 	MchId  string
 	ApiKey string
 }
 
+// 实例化API客户端
 func NewClient(appId, mchId, apiKey string) *Client {
 	return &Client{
-		AppId:  appId,
-		MchId:  mchId,
-		ApiKey: apiKey,
+		stdClient: &http.Client{},
+		AppId:     appId,
+		MchId:     mchId,
+		ApiKey:    apiKey,
+	}
+}
+
+// 设置请求超时时间
+func (c *Client) SetTimeout(d time.Duration) {
+	c.stdClient.Timeout = d
+	if c.tlsClient != nil {
+		c.tlsClient.Timeout = d
 	}
 }
 
@@ -55,20 +68,21 @@ func (c *Client) WithCert(certFile, keyFile, rootcaFile string) error {
 	trans := &http.Transport{
 		TLSClientConfig: conf,
 	}
-	c.seclient = &http.Client{
+	c.tlsClient = &http.Client{
 		Transport: trans,
 	}
 	return nil
 }
 
+// 发送请求
 func (c *Client) Post(url string, params Params, tls bool) (Params, error) {
-	var hc *http.Client
+	var httpc *http.Client
 	if tls {
-		hc = c.seclient
+		httpc = c.tlsClient
 	} else {
-		hc = http.DefaultClient
+		httpc = c.stdClient
 	}
-	resp, err := hc.Post(url, bodyType, c.Encode(params))
+	resp, err := httpc.Post(url, bodyType, c.Encode(params))
 	if err != nil {
 		return nil, err
 	}
