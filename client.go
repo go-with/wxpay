@@ -78,6 +78,9 @@ func (c *Client) WithCert(certFile, keyFile, rootcaFile string) error {
 func (c *Client) Post(url string, params Params, tls bool) (Params, error) {
 	var httpc *http.Client
 	if tls {
+		if c.tlsClient == nil {
+			return nil, errors.New("tls client is not initialized")
+		}
 		httpc = c.tlsClient
 	} else {
 		httpc = c.stdClient
