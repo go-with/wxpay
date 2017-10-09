@@ -15,7 +15,7 @@ package main
 import (
 	"log"
 
-	"github.com/go-with/wxpay"
+	"gopkg.in/go-with/wxpay.v1"
 )
 
 const (
