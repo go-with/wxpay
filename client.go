@@ -86,6 +86,29 @@ func (c *Client) WithCertBytes(cert, key, rootca []byte) error {
 	return nil
 }
 
+func (c *Client) WithCertBytes(certFile, keyFile, rootcaFile []byte) error {
+	cert, err := tls.X509KeyPair(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+	pool := x509.NewCertPool()
+	ok := pool.AppendCertsFromPEM(rootcaFile)
+	if !ok {
+		return errors.New("failed to parse root certificate")
+	}
+	conf := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      pool,
+	}
+	trans := &http.Transport{
+		TLSClientConfig: conf,
+	}
+	c.tlsClient = &http.Client{
+		Transport: trans,
+	}
+	return nil
+}
+
 // 发送请求
 func (c *Client) Post(url string, params Params, tls bool) (Params, error) {
 	var httpc *http.Client
