@@ -48,21 +48,33 @@ func (c *Client) SetTimeout(d time.Duration) {
 
 // 附着商户证书
 func (c *Client) WithCert(certFile, keyFile, rootcaFile string) error {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	cert, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		return err
 	}
-	data, err := ioutil.ReadFile(rootcaFile)
+	key, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return err
+	}
+	rootca, err := ioutil.ReadFile(rootcaFile)
+	if err != nil {
+		return err
+	}
+	return c.WithCertBytes(cert, key, rootca)
+}
+
+func (c *Client) WithCertBytes(cert, key, rootca []byte) error {
+	tlsCert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
 		return err
 	}
 	pool := x509.NewCertPool()
-	ok := pool.AppendCertsFromPEM(data)
+	ok := pool.AppendCertsFromPEM(rootca)
 	if !ok {
 		return errors.New("failed to parse root certificate")
 	}
 	conf := &tls.Config{
-		Certificates: []tls.Certificate{cert},
+		Certificates: []tls.Certificate{tlsCert},
 		RootCAs:      pool,
 	}
 	trans := &http.Transport{
