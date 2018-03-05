@@ -64,9 +64,7 @@ func main() {
 
 [微信支付商户平台](https://pay.weixin.qq.com/)
 
-[微信支付商户平台开发者文档](https://pay.weixin.qq.com/wiki/doc/api/index.php)
-
-[微信支付商户平台API错误码查询](http://wxpay.wxutil.com/errcode/index.php)
+[微信支付商户平台开发者文档](https://pay.weixin.qq.com/wiki/doc/api/index.html)
 
 ## 许可协议
 
